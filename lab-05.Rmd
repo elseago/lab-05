@@ -17,33 +17,191 @@ states <- read_csv("data/states.csv")
 ```
 
 ### Exercise 1
+There are 3 dennys in Alaska
 
-Remove this text, and add your answer for Exercise 1 here.
-Add code chunks as needed.
-Don't forget to label your code chunk.
-Do not use spaces in code chunk labels.
+```{r num-dennys-alaska}
+
+dn_ak <- dennys %>%
+  filter(state == "AK")
+nrow(dn_ak)
+
+```
+
 
 ### Exercise 2
+There are 2 laquintas
+```{r num-laquinta-alaska}
+lq_ak <- laquinta %>%
+  filter(state == "AK")
+nrow(lq_ak)
+```
 
-Remove this text, and add your answer for Exercise 1 here.
-Add code chunks as needed.
-Don't forget to label your code chunk.
-Do not use spaces in code chunk labels.
 
 ### Exercise 3
 
-...
+```{r join-data}
+dn_lq_ak <- full_join(dn_ak, lq_ak, by = "state")
+dn_lq_ak
+```
+
 
 ### Exercise 4
+There are 6 observations and the variables are address, city, zip, long and lat for each dennys and laquinta location, and state.
 
-...
+```{r num-obs-and-variables}
+nrow(dn_lq_ak)
+ls(dn_lq_ak)
+```
+
+
 
 ### Exercise 5
 
-...
+```{r make-haversine-func}
+haversine <- function(long1, lat1, long2, lat2, round = 3) {
+  # convert to radians
+  long1 = long1 * pi / 180
+  lat1  = lat1  * pi / 180
+  long2 = long2 * pi / 180
+  lat2  = lat2  * pi / 180
+  
+  R = 6371 # Earth mean radius in km
+  
+  a = sin((lat2 - lat1)/2)^2 + cos(lat1) * cos(lat2) * sin((long2 - long1)/2)^2
+  d = R * 2 * asin(sqrt(a))
+  
+  return( round(d,round) ) # distance in km
+}
+```
+
 
 ### Exercise 6
 
-...
+```{r calc-dist}
+dn_lq_ak <- mutate(dn_lq_ak, distance = haversine(longitude.x, latitude.x, longitude.y, latitude.y, round = 3))
 
-Add exercise headings as needed.
+```
+
+### Exercise 7
+
+```{r find-min-dis}
+dn_lq_ak_mindist <- dn_lq_ak %>%
+  group_by(address.x) %>%
+  summarize(closest = min(distance))
+
+dn_lq_ak_mindist
+
+```
+
+### Exercise 8
+Because there are only 3 Dennys and 2 laquintas in Alaska, the distribution is not particularly informative. Dennys and lquintas are close together, on average they are 4.41 miles apart.
+
+```{r}
+mean(dn_lq_ak_mindist$closest)
+
+ggplot(dn_lq_ak_mindist, aes(x = closest))+
+  geom_histogram() +
+  geom_vline(xintercept = mean(dn_lq_ak_mindist$closest), lwd = 2 , linetype = 2 , color = "black")
+```
+
+
+### Exercise 9
+NC
+There is a slight positive skew, but noting the change in X axis, the distance between laquintas and Dennys is much larger in NC than in AK.The mean distance to the closest is 65 miles.
+```{r NC-num-join}
+
+dn_nc <- dennys %>%
+  filter(state == "NC")
+nrow(dn_nc)
+
+lq_nc <- laquinta %>%
+  filter(state == "NC")
+nrow(lq_nc)
+
+dn_lq_nc <- full_join(dn_nc, lq_nc, by = "state")
+dn_lq_nc
+
+```
+
+```{r NC-compute}
+
+dn_lq_nc <- mutate(dn_lq_nc, distance = haversine(longitude.x, latitude.x, longitude.y, latitude.y, round = 3))
+
+dn_lq_nc_mindist <- dn_lq_nc %>%
+  group_by(address.x) %>%
+  summarize(closest = min(distance))
+
+dn_lq_nc_mindist
+
+mean(dn_lq_nc_mindist$closest)
+
+ggplot(dn_lq_nc_mindist, aes(x = closest))+
+  geom_histogram() +
+  geom_vline(xintercept = mean(dn_lq_nc_mindist$closest), lwd = 2 , linetype = 2 , color = "black")
+```
+
+### Exercise 10
+TX
+The mean distance to the closest Dennys is 5 miles. The distribution is very positively skewed. This state is the one where the joke seems to make the most sense (the mean is smaller aka closer for AK, but the sample size is very small).
+```{r tx-num-join}
+
+dn_tx <- dennys %>%
+  filter(state == "TX")
+nrow(dn_tx)
+
+lq_tx <- laquinta %>%
+  filter(state == "TX")
+nrow(lq_tx)
+
+dn_lq_tx <- full_join(dn_tx, lq_tx, by = "state")
+dn_lq_tx
+```
+
+```{r tx-compute}
+
+dn_lq_tx <- mutate(dn_lq_tx, distance = haversine(longitude.x, latitude.x, longitude.y, latitude.y, round = 3))
+
+dn_lq_tx_mindist <- dn_lq_tx %>%
+  group_by(address.x) %>%
+  summarize(closest = min(distance))
+
+dn_lq_tx_mindist
+
+mean(dn_lq_tx_mindist$closest)
+
+ggplot(dn_lq_tx_mindist, aes(x = closest))+
+  geom_histogram() +
+  geom_vline(xintercept = mean(dn_lq_tx_mindist$closest), lwd = 2 , linetype = 2 , color = "black")
+```
+
+### Exercise 11
+SC
+On average, dennys and laquintas are 32 miles apart in SC. This distribution is wide and flat and not bell curved at all.
+```{r}
+dn_sc <- dennys %>%
+  filter(state == "SC")
+nrow(dn_sc)
+
+lq_sc <- laquinta %>%
+  filter(state == "SC")
+nrow(lq_sc)
+
+dn_lq_sc <- full_join(dn_sc, lq_sc, by = "state")
+dn_lq_sc
+```
+
+```{r}
+dn_lq_sc <- mutate(dn_lq_sc, distance = haversine(longitude.x, latitude.x, longitude.y, latitude.y, round = 3))
+
+dn_lq_sc_mindist <- dn_lq_sc %>%
+  group_by(address.x) %>%
+  summarize(closest = min(distance))
+
+dn_lq_sc_mindist
+mean(dn_lq_sc_mindist$closest)
+
+ggplot(dn_lq_sc_mindist, aes(x = closest))+
+  geom_histogram() +
+  geom_vline(xintercept = mean(dn_lq_sc_mindist$closest), lwd = 2 , linetype = 2 , color = "black")
+```
+
